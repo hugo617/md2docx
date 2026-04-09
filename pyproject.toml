@@ -1,0 +1,32 @@
+[[tool.poetry.source]]
+name = "aliyun"
+url = "https://mirrors.aliyun.com/pypi/simple/"
+priority = "primary"
+
+[tool.poetry]
+name = "md2docx"
+version = "0.1.0"
+description = ""
+authors = ["hugo617"]
+readme = "README.md"
+packages = [{include = "src"}]
+
+[tool.poetry.dependencies]
+python = "^3.10"
+python-docx = "^1.2.0"
+docxtpl = "^0.20.2"
+markdown = "^3.10"
+pyquery = "^2.0"
+pygments = "^2.20"
+pyyaml = "^6.0"
+lxml = "^6.0"
+requests = "^2.33"
+
+[tool.poetry.group.dev.dependencies]
+pytest = "*"
+black = "*"
+mypy = "*"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
