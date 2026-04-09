@@ -15,7 +15,10 @@ def process_images(content: str, func: Callable[[str], Tuple[str, bool]]) -> str
             mid = tar[tar.index("(") + 1 : -1]
             suf = tar[-1]
         else:
-            mid = re.search(r'src="([^"]*)"', tar).group(1)
+            src_match = re.search(r'src="([^"]*)"', tar)
+            if src_match is None:
+                return tar
+            mid = src_match.group(1)
             pre, suf = tar.split(mid)
         new_name, err = func(mid)
         return pre + (new_name if not err else mid) + suf

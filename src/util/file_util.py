@@ -2,6 +2,7 @@ import os
 import shutil
 import uuid
 from typing import Optional, Tuple
+from urllib.parse import urlparse
 
 from . import str_util, net_util
 
@@ -28,7 +29,10 @@ def get_abspath(basefile: str, filepath: str) -> str:
 def get_image_to_target(
     link: str, from_filepath: str, target_foldpath: str
 ) -> Tuple[str, bool]:
-    name = uuid.uuid4().hex + "." + link.split(".")[-1]
+    # Extract extension, stripping URL query/fragment if present
+    path = urlparse(link).path
+    ext = path.rsplit(".", 1)[-1] if "." in path else "bin"
+    name = uuid.uuid4().hex + "." + ext
     if str_util.is_url(link):
         net_util.down_image(link, os.path.join(target_foldpath, name))
     else:
