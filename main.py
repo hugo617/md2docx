@@ -21,7 +21,29 @@ def cmd_convert(args):
 
 
 def cmd_fill(args):
-    print("fill command - TODO (Phase 3)")
+    from src.util.file_util import read
+    from src.template.template import load_config, parse_md_for_template, extract_sections, resolve_section_data
+    from src.template.table_filler import fill_table_template
+
+    md_content = read(args.filepath)
+    front_matter, body = parse_md_for_template(md_content)
+    sections = extract_sections(body)
+
+    config_path = args.config
+    if not config_path:
+        tpl_dir = os.path.dirname(args.template)
+        config_path = os.path.join(tpl_dir, "config.yaml")
+
+    config = load_config(config_path)
+    data = resolve_section_data(config, front_matter, sections)
+
+    output = args.output
+    if not output:
+        base = os.path.splitext(args.filepath)[0]
+        output = base + "_filled.docx"
+
+    fill_table_template(args.template, config, data, output)
+    print(f"Generated: {output}")
 
 
 def cmd_extract(args):
@@ -44,10 +66,57 @@ def cmd_extract(args):
 
 
 def cmd_template(args):
+    import shutil
+    import yaml
+    from docx import Document
+
     if args.tpl_command == "list":
-        print("template list - TODO (Phase 3)")
+        tpl_dir = "templates"
+        if os.path.isdir(tpl_dir):
+            for name in os.listdir(tpl_dir):
+                path = os.path.join(tpl_dir, name)
+                if os.path.isdir(path):
+                    has_config = os.path.exists(os.path.join(path, "config.yaml"))
+                    print(f"  {name} {'(configured)' if has_config else '(no config)'}")
+        else:
+            print("No templates directory found.")
     elif args.tpl_command == "init":
-        print("template init - TODO (Phase 3)")
+        name = args.name
+        filepath = args.filepath
+        tpl_dir = os.path.join("templates", name)
+        os.makedirs(tpl_dir, exist_ok=True)
+        shutil.copy(filepath, os.path.join(tpl_dir, "template.docx"))
+
+        doc = Document(filepath)
+        fields = []
+        for ti, table in enumerate(doc.tables):
+            for ri, row in enumerate(table.rows):
+                seen = set()
+                for ci, cell in enumerate(row.cells):
+                    tc_id = id(cell._tc)
+                    if tc_id in seen:
+                        continue
+                    seen.add(tc_id)
+                    text = cell.text.strip()
+                    if text:
+                        fields.append({
+                            "name": f"field_{ti}_{ri}_{ci}",
+                            "table": ti, "row": ri, "col": ci,
+                            "label": text,
+                        })
+
+        config = {
+            "name": name,
+            "mode": "table_fill",
+            "template": "template.docx",
+            "fields": fields,
+        }
+        config_path = os.path.join(tpl_dir, "config.yaml")
+        with open(config_path, "w", encoding="utf-8") as f:
+            yaml.dump(config, f, allow_unicode=True, default_flow_style=False)
+        print(f"Template initialized: {tpl_dir}")
+        print(f"Config generated: {config_path}")
+        print(f"Found {len(fields)} fields - edit config.yaml to customize")
     else:
         print("Usage: md2docx template {list|init}")
 
