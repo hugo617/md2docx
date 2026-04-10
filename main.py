@@ -122,7 +122,9 @@ def cmd_template(args):
 
 
 def cmd_web(args):
-    print("web command - TODO (Phase 5)")
+    import uvicorn
+    from src.web.app import app
+    uvicorn.run(app, host=args.host, port=args.port)
 
 
 def main():

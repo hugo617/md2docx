@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>md2docx - Markdown/Word 转换工具</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <div class="container">
+        <h1>md2docx</h1>
+        <p class="subtitle">Markdown &harr; Word (.docx) 双向转换工具</p>
+
+        <div class="tabs">
+            <button class="tab active" onclick="showTab('convert')">MD → Word</button>
+            <button class="tab" onclick="showTab('extract')">Word → MD</button>
+        </div>
+
+        <div id="convert" class="panel">
+            <h2>Markdown 转 Word</h2>
+            <form id="convert-form">
+                <input type="file" id="md-file" accept=".md,.markdown,.txt" required>
+                <button type="submit">转换</button>
+            </form>
+            <div id="convert-result" class="result"></div>
+        </div>
+
+        <div id="extract" class="panel" style="display:none">
+            <h2>Word 转 Markdown</h2>
+            <form id="extract-form">
+                <input type="file" id="docx-file" accept=".docx" required>
+                <button type="submit">提取</button>
+            </form>
+            <div id="extract-result" class="result"></div>
+        </div>
+    </div>
+
+    <script>
+    function showTab(name) {
+        document.querySelectorAll('.panel').forEach(p => p.style.display = 'none');
+        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        document.getElementById(name).style.display = 'block';
+        event.target.classList.add('active');
+    }
+
+    document.getElementById('convert-form').onsubmit = async (e) => {
+        e.preventDefault();
+        const formData = new FormData();
+        formData.append('file', document.getElementById('md-file').files[0]);
+        const resp = await fetch('/api/convert', {method: 'POST', body: formData});
+        const data = await resp.json();
+        const el = document.getElementById('convert-result');
+        if (data.task_id) {
+            el.innerHTML = '<a href="/api/download/' + data.task_id + '" class="download-btn">下载 ' + data.filename + '</a>';
+        } else {
+            el.innerHTML = '<p class="error">转换失败</p>';
+        }
+    };
+
+    document.getElementById('extract-form').onsubmit = async (e) => {
+        e.preventDefault();
+        const formData = new FormData();
+        formData.append('file', document.getElementById('docx-file').files[0]);
+        const resp = await fetch('/api/extract', {method: 'POST', body: formData});
+        const data = await resp.json();
+        const el = document.getElementById('extract-result');
+        if (data.task_id) {
+            el.innerHTML = '<a href="/api/download/' + data.task_id + '" class="download-btn">下载 ' + data.filename + '</a>';
+        } else {
+            el.innerHTML = '<p class="error">提取失败</p>';
+        }
+    };
+    </script>
+</body>
+</html>

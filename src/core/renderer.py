@@ -1,3 +1,5 @@
+import os
+
 from docx import Document
 from docx.shared import Pt, RGBColor
 from docx.oxml.ns import qn
@@ -73,9 +75,25 @@ def _render_element(doc: Document, element: DocElement, config: dict) -> None:
             _render_hr(doc)
 
         case ElementType.IMAGE:
-            p = doc.add_paragraph()
-            run = p.add_run(f"[图片: {element.url}]")
-            run.font.color.rgb = RGBColor(128, 128, 128)
+            import io
+            from docx.shared import Inches
+            try:
+                if element.url.startswith(('http://', 'https://')):
+                    import requests as _requests
+                    resp = _requests.get(element.url, timeout=30)
+                    doc.add_picture(io.BytesIO(resp.content), width=Inches(6))
+                elif element.local_path and os.path.exists(element.local_path):
+                    doc.add_picture(element.local_path, width=Inches(6))
+                elif element.url and os.path.exists(element.url):
+                    doc.add_picture(element.url, width=Inches(6))
+                else:
+                    p = doc.add_paragraph()
+                    run = p.add_run(f"[图片: {element.url}]")
+                    run.font.color.rgb = RGBColor(128, 128, 128)
+            except Exception:
+                p = doc.add_paragraph()
+                run = p.add_run(f"[图片加载失败: {element.url}]")
+                run.font.color.rgb = RGBColor(255, 0, 0)
 
 
 def _render_inline(p, element: DocElement) -> None:
