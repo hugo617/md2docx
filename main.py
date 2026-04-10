@@ -25,7 +25,22 @@ def cmd_fill(args):
 
 
 def cmd_extract(args):
-    print("extract command - TODO (Phase 2)")
+    from src.core.extractor import extract_docx_to_elements
+    from src.core.md_writer import elements_to_md
+    from src.util.file_util import write
+
+    elements, images = extract_docx_to_elements(args.filepath)
+    md_content = elements_to_md(elements)
+
+    output = args.output
+    if not output:
+        base = os.path.splitext(args.filepath)[0]
+        output = base + "_extracted.md"
+
+    write(output, md_content)
+    print(f"Generated: {output}")
+    if images:
+        print(f"Extracted {len(images)} images")
 
 
 def cmd_template(args):
