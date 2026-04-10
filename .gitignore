@@ -7,7 +7,8 @@ build/
 output/
 *.docx
 !tests/fixtures/*.docx
-!templates/**/*.docx
 .env
 .idea/
 .vscode/
+templates/meeting_minutes/
+MEETING_MINUTES_TEST_SUMMARY.md
